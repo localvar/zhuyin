@@ -1,6 +1,11 @@
+// Copyright (c) 2013 Localvar. All rights reserved.
+// Use of this source code is governed by a MIT-style
+// license that can be found in the LICENSE file.
+
 package zhuyin
 
 var (
+	// map of Pinyin to Zhuyin
 	map_p2z = map[string]string{
 		// Consonant
 		"b": "ㄅ", "p": "ㄆ", "m": "ㄇ", "f": "ㄈ",
@@ -26,6 +31,7 @@ var (
 		"iao": "一ㄠ",
 	}
 
+	// map of Zhuyin to Pinyin
 	map_z2p = map[string]string{
 		// Consonant
 		"ㄅ": "b", "ㄆ": "p", "ㄇ": "m", "ㄈ": "f",
@@ -52,9 +58,12 @@ var (
 		"一ㄤ": "iang", "ㄨㄤ": "uang", "一ㄢ": "ian",
 		"一ㄠ": "iao", "ㄨㄟ": "ui",
 
+		// 'y' and 'w' is not included because '一' and 'ㄨ' are already
+		// mapped to 'i' and 'u'
 		// "一": "y", "ㄨ": "w",
 	}
 
+	// tones for Pinyin
 	pinyinTones = [6][5]rune{
 		{'a', 'ā', 'á', 'ǎ', 'à'},
 		{'o', 'ō', 'ó', 'ǒ', 'ò'},
@@ -64,9 +73,11 @@ var (
 		{'ü', 'ǖ', 'ǘ', 'ǚ', 'ǜ'},
 	}
 
+	// tones for Zhuyin
 	zhuyinTones = [5]string{"˙", "", "ˊ", "ˇ", "ˋ"}
 )
 
+// toneChar returns the toned rune for char 'c' of 'tone' in Pinyin
 func toneChar(c byte, tone byte) rune {
 	r := rune(c)
 	if r == 'v' {
@@ -77,29 +88,44 @@ func toneChar(c byte, tone byte) rune {
 			return t[tone]
 		}
 	}
-	return r
+	panic("IMPOSSIBLE: should not run to here.")
 }
 
+// toneRhymes returns the toned rhymes in Pinyin
 func toneRhymes(s string, tone byte) string {
+	// if only one character, tone this character
 	if len(s) == 1 {
 		return string(toneChar(s[0], tone))
 	}
 
 	a, b := s[0], s[1]
-	if a == 'a' || ((a == 'o' || a == 'e') && b != 'a') {
+
+	// Tone the 1st character, if:
+	// * the first character is 'a'
+	// * there's no 'a' and the 1st character is 'o' or 'e'
+	// * the 2nd character is not rhymes
+	if a == 'a' || ((a == 'o' || a == 'e') && b != 'a') || !isRhymes(b) {
 		return string(toneChar(a, tone)) + s[1:]
 	}
+
+	// tone the 2nd character otherwise
 	return string(a) + string(toneChar(b, tone)) + s[2:]
 }
 
+// return true if the input character is rhymes, otherwise return false
 func isRhymes(b byte) bool {
 	return b == 'a' || b == 'e' || b == 'i' || b == 'o' || b == 'u' || b == 'v'
 }
 
+// return true if the input character is consonant, otherwise return false
 func isConsonant(b byte) bool {
 	return b >= 'a' && b <= 'z' && !isRhymes(b)
 }
 
+// split the input string into consonant, rhymes and tone
+// for example: 'zhang1' will be split to consonant 'zh', rhymes 'ang' and
+//              tone '1'
+// returns an empty rhymes in case an error
 func split(s string) (string, string, byte) {
 	i := 0
 	for ; i < len(s); i++ {
@@ -118,6 +144,7 @@ func split(s string) (string, string, byte) {
 	}
 	rhymes := s[len(consonant):i]
 
+	// rhymes could not be empty, and the length of tone is at most 1
 	if len(rhymes) == 0 || len(s)-i > 2 {
 		return "", "", 0
 	}
@@ -133,16 +160,25 @@ func split(s string) (string, string, byte) {
 	return consonant, rhymes, tone
 }
 
+// encodePinyin encode the input consonant, rhymes and tone into Pinyin
+// for example: encodePinyin("zh", "ang", 1) outputs 'zhāng'
+// return an empty string in case an error
 func encodePinyin(consonant string, rhymes string, tone byte) string {
-	if len(rhymes) == 0 {
+	// rhymes could not be empty and the maximum value of tone is 4
+	if len(rhymes) == 0 || tone > 4 {
 		return ""
 	}
 
 	if len(consonant) > 0 {
+		// is it an valid consonant?
+		if !isConsonant(consonant[0]) {
+			return ""
+		}
 		if _, ok := map_p2z[consonant]; !ok {
 			return ""
 		}
 
+		// convert rhymes 'ü' to 'u' if consonant is 'j', 'q', 'x' or 'y'
 		if rhymes[0] == 'v' {
 			c := consonant[0]
 			if c == 'j' || c == 'q' || c == 'x' || c == 'y' {
@@ -151,14 +187,16 @@ func encodePinyin(consonant string, rhymes string, tone byte) string {
 		}
 	}
 
+	// is it an valid rhymes?
+	if !isRhymes(rhymes[0]) {
+		return ""
+	}
 	if _, ok := map_p2z[rhymes]; !ok {
 		return ""
 	}
 
-	if rhymes = toneRhymes(rhymes, tone); len(rhymes) == 0 {
-		return ""
-	}
-
+	// tone the rhymes and convert 'v' to 'ü'
+	rhymes = toneRhymes(rhymes, tone)
 	if rhymes[0] == 'v' {
 		rhymes = "ü" + rhymes[1:]
 	}
@@ -166,13 +204,20 @@ func encodePinyin(consonant string, rhymes string, tone byte) string {
 	return consonant + rhymes
 }
 
+// EncodePinyin encode the input string into Pinyin
+// for example: EncodePinyin("zhang1") outputs 'zhāng'
+// return an empty string in case an error
 func EncodePinyin(s string) string {
+	// the special case
 	if s == "e5" {
 		return "ê"
 	}
 	return encodePinyin(split(s))
 }
 
+// decodeRhymes decode the input string into rhymes and tone
+// for example: decodeRhymes("āng") outputs 'ang' and 1
+// returns an empty rhymes in case an error
 func decodeRhymes(s string) (string, byte) {
 	var tone byte
 	var rhymes string
@@ -197,9 +242,13 @@ func decodeRhymes(s string) (string, byte) {
 	return rhymes, tone
 }
 
+// decodePinyin decode the input string into consonant, rhymes and tone
+// for example: decodePinyin("zhāng") outputs 'zh','ang' and 1
+// return an empty rhymes in case an error
 func decodePinyin(s string) (string, string, byte) {
 	var consonant, rhymes string
 
+	// split the input into consonant and rhymes(toned)
 	for i := 0; i < len(s); i++ {
 		c := s[i]
 		if !isConsonant(c) {
@@ -207,17 +256,21 @@ func decodePinyin(s string) (string, string, byte) {
 			break
 		}
 	}
+
+	// is it an valid consonant?
 	if len(consonant) > 0 {
 		if _, ok := map_p2z[consonant]; !ok {
 			return "", "", 0
 		}
 	}
 
+	// decode the toned rhymes into rhymes and tone
 	rhymes, tone := decodeRhymes(rhymes)
 	if len(rhymes) == 0 {
 		return "", "", 0
 	}
 
+	// convert 'u' to 'v' if consonant is 'j', 'q', 'x' or 'y'
 	if len(consonant) > 0 && rhymes[0] == 'u' {
 		c := consonant[0]
 		if c == 'j' || c == 'q' || c == 'x' || c == 'y' {
@@ -225,6 +278,7 @@ func decodePinyin(s string) (string, string, byte) {
 		}
 	}
 
+	// is it an valid rhymes?
 	if _, ok := map_p2z[rhymes]; !ok {
 		return "", "", 0
 	}
@@ -232,6 +286,9 @@ func decodePinyin(s string) (string, string, byte) {
 	return consonant, rhymes, tone
 }
 
+// DecodePinyin decode the input Pinyin
+// for example: DecodePinyin("zhāng") outputs 'zhang1'
+// return an empty string in case an error
 func DecodePinyin(s string) string {
 	if s == "ê" {
 		return "e5"
@@ -244,6 +301,9 @@ func DecodePinyin(s string) string {
 	return consonant + rhymes + string(tone+'0')
 }
 
+// encodePinyin encode the input consonant, rhymes and tone into Zhuyin
+// for example: encodePinyin("m", "in", 2) outputs 'ㄇ一ㄣˊ'
+// return an empty string in case an error
 func encodeZhuyin(consonant string, rhymes string, tone byte) string {
 	if len(rhymes) == 0 {
 		return ""
@@ -256,6 +316,7 @@ func encodeZhuyin(consonant string, rhymes string, tone byte) string {
 		}
 	}
 
+	// the special cases for 'Zheng3 Ti3 Ren4 Du2'
 	if rhymes == "i" {
 		if consonant == "zh" || consonant == "ch" || consonant == "sh" ||
 			consonant == "r" || consonant == "z" || consonant == "c" ||
@@ -273,6 +334,7 @@ func encodeZhuyin(consonant string, rhymes string, tone byte) string {
 		}
 	}
 
+	// consonant must be valid
 	if len(consonant) > 0 {
 		if l, ok := map_p2z[consonant]; ok {
 			consonant = l
@@ -281,6 +343,7 @@ func encodeZhuyin(consonant string, rhymes string, tone byte) string {
 		}
 	}
 
+	// rhymes must be valid
 	if len(rhymes) > 0 {
 		if l, ok := map_p2z[rhymes]; ok {
 			rhymes = l
@@ -292,6 +355,9 @@ func encodeZhuyin(consonant string, rhymes string, tone byte) string {
 	return consonant + rhymes + zhuyinTones[tone]
 }
 
+// encodeZhuyin encode the input string into Zhuyin
+// for example: encodeZhuyin("min2") outputs 'ㄇ一ㄣˊ'
+// return an empty string in case an error
 func EncodeZhuyin(s string) string {
 	if s == "e5" {
 		return "ㄝ"
@@ -299,25 +365,34 @@ func EncodeZhuyin(s string) string {
 	return encodeZhuyin(split(s))
 }
 
+// decodeZhuyin decode the input string into consonant, rhymes and tone
+// for example: decodeZhuyin("ㄇ一ㄣˊ") outputs 'm','in' and 2
+// return an empty rhymes in case an error
 func decodeZhuyin(s string) (string, string, byte) {
 	var consonant, rhymes string
 	var tone byte = 1
 
+	// split input into consonant, rhymes and tone
 split_input:
 	for i, ch := range s {
+		// if the character is consonant or rhymes
 		if v, ok := map_z2p[string(ch)]; ok {
+			// if it is the 1st character and it is consonant
 			if i == 0 && isConsonant(v[0]) {
 				consonant = v
 			} else {
+				// add it to rhymes, note, rhymes is still Zhuyin
 				rhymes = rhymes + string(ch)
 			}
 			continue
 		}
 
+		// both consonant and rhymes is empty?
 		if i == 0 {
 			return "", "", 0
 		}
 
+		// try to find the tone
 		st := s[i:]
 		for j, t := range zhuyinTones {
 			if st == t {
@@ -329,19 +404,27 @@ split_input:
 	}
 
 	if len(rhymes) == 0 {
+		// if it is 'Zheng3 Ti3 Ren4 Du2', the rhymes should be 'i'
 		if consonant == "zh" || consonant == "ch" || consonant == "sh" ||
 			consonant == "r" || consonant == "z" || consonant == "c" ||
 			consonant == "s" {
 			rhymes = "i"
 		}
+		// rhymes will be empty if not 'Zheng3 Ti3 Ren4 Du2',
+		// this is an error case, will be handled outside
 		return consonant, rhymes, tone
 	}
 
+	// is it an valid rhymes?
 	rhymes, ok := map_z2p[rhymes]
 	if (!ok) || (!isRhymes(rhymes[0])) {
 		return "", "", 0
 	}
+
 	if len(consonant) == 0 {
+		// first, check if it is 'Zheng3 Ti3 Ren4 Du2',
+		// if not, remove leading 'u' and set consonant to 'w',
+		// or remove leading 'i' and set consonant to 'y',
 		if rhymes == "i" || rhymes == "v" || rhymes == "e" ||
 			rhymes == "ve" || rhymes == "in" || rhymes == "van" ||
 			rhymes == "ing" || rhymes == "vn" {
@@ -360,6 +443,9 @@ split_input:
 	return consonant, rhymes, tone
 }
 
+// DecodePinyin decode the input Zhuyin
+// for example: DecodeZhuyin("ㄇ一ㄣˊ") outputs 'min2'
+// return an empty string in case an error
 func DecodeZhuyin(s string) string {
 	if s == "ㄝ" {
 		return "e5"
@@ -372,11 +458,21 @@ func DecodeZhuyin(s string) string {
 	return consonant + rhymes + string(tone+'0')
 }
 
+// PinyinToZhuyin converts the input Pinyin to Zhuyin
+// for example: zhāng  -->  ㄓㄤ
 func PinyinToZhuyin(s string) string {
+	if s == "ê" {
+		return "ㄝ"
+	}
 	return encodeZhuyin(decodePinyin(s))
 }
 
+// ZhuyinToPinyin converts the input Zhuyin to Pinyin
+// for example: ㄓㄤ  -->  zhāng
 func ZhuyinToPinyin(s string) string {
+	if s == "ㄝ" {
+		return "ê"
+	}
 	return encodePinyin(decodeZhuyin(s))
 }
 

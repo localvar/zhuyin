@@ -1,3 +1,7 @@
+// Copyright (c) 2013 Localvar. All rights reserved.
+// Use of this source code is governed by a MIT-style
+// license that can be found in the LICENSE file.
+
 package zhuyin
 
 import (
@@ -21,6 +25,7 @@ func TestEncodePinyin(t *testing.T) {
 		"yi2", "yí",
 		"yuan2", "yuán",
 		"yvan2", "yuán",
+		"min2", "mín",
 
 		// negative cases
 		"alkfj", "",
@@ -90,6 +95,7 @@ func TestEncodeZhuyin(t *testing.T) {
 		"yi2", "一ˊ",
 		"yuan2", "ㄩㄢˊ",
 		"yvan2", "ㄩㄢˊ",
+		"min2", "ㄇ一ㄣˊ",
 
 		// negative cases
 		"alkfj", "",
@@ -127,6 +133,7 @@ func TestDecodeZhuyin(t *testing.T) {
 		"ㄩㄝˋ", "yve4",
 		"一ˊ", "yi2",
 		"ㄩㄢˊ", "yvan2",
+		"ㄇ一ㄣˊ", "min2",
 
 		// negative cases
 		"ㄩㄝㄝ", "",
@@ -136,6 +143,35 @@ func TestDecodeZhuyin(t *testing.T) {
 	t.Log("testing zhuyin decoding...")
 	for i := 0; i < len(cases); i += 2 {
 		output := DecodeZhuyin(cases[i])
+		if output != cases[i+1] {
+			t.Errorf("input: %s   desired: %s   actural: %s", cases[i], cases[i+1], output)
+		}
+	}
+}
+
+func TestPinyinToZhuyin(t *testing.T) {
+	cases := []string{
+		"mín", "ㄇ一ㄣˊ",
+		"zhāng", "ㄓㄤ",
+	}
+	t.Log("testing pinyin to zhuyin...")
+	for i := 0; i < len(cases); i += 2 {
+		output := PinyinToZhuyin(cases[i])
+		if output != cases[i+1] {
+			t.Errorf("input: %s   desired: %s   actural: %s", cases[i], cases[i+1], output)
+		}
+	}
+}
+
+func TestZhuyinToPinyin(t *testing.T) {
+	cases := []string{
+		"ㄇ一ㄣˊ", "mín",
+		//	"ㄓㄤ", "zhāng",
+	}
+
+	t.Log("testing zhuyin to pinyin...")
+	for i := 0; i < len(cases); i += 2 {
+		output := ZhuyinToPinyin(cases[i])
 		if output != cases[i+1] {
 			t.Errorf("input: %s   desired: %s   actural: %s", cases[i], cases[i+1], output)
 		}
