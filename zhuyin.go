@@ -1,7 +1,5 @@
 package zhuyin
 
-//import "fmt"
-
 var (
 	map_p2z = map[string]string{
 		// Consonant
@@ -44,17 +42,18 @@ var (
 		"ㄠ": "ao", "ㄡ": "ou",
 		"ㄢ": "an", "ㄣ": "en",
 		"ㄤ": "ang", "ㄥ": "eng",
-		/*
-			"一": "y", "ㄨ": "w",
-			"ㄨㄥ": "ong", "一ㄝ": "ie",,
-			 "一ㄡ": "iu", "一ㄣ": "in", "一ㄥ": "ing",
-			"ㄩㄝ": "ue", "ㄩㄝ": "ve", // 'ue' is same as 've', for typo
-			"ㄨㄣ": "un", "ㄩㄣ": "vn", "一ㄚ": "ia",
-			"ㄨㄚ": "ua", "ㄨㄢ": "uan", "ㄩㄢ": "van",
-			"ㄨㄞ": "uai", "ㄨㄛ": "uo", "ㄩㄥ": "iong",
-			"一ㄤ": "iang", "ㄨㄤ": "uang", "一ㄢ": "ian",
-			"一ㄠ": "iao", "ㄨㄟ": "ui",
-		*/}
+
+		"ㄨㄥ": "ong", "一ㄝ": "ie",
+		"一ㄡ": "iu", "一ㄣ": "in", "一ㄥ": "ing",
+		"ㄩㄝ": "ve",
+		"ㄨㄣ": "un", "ㄩㄣ": "vn", "一ㄚ": "ia",
+		"ㄨㄚ": "ua", "ㄨㄢ": "uan", "ㄩㄢ": "van",
+		"ㄨㄞ": "uai", "ㄨㄛ": "uo", "ㄩㄥ": "iong",
+		"一ㄤ": "iang", "ㄨㄤ": "uang", "一ㄢ": "ian",
+		"一ㄠ": "iao", "ㄨㄟ": "ui",
+
+		// "一": "y", "ㄨ": "w",
+	}
 
 	pinyinTones = [6][5]rune{
 		{'a', 'ā', 'á', 'ǎ', 'à'},
@@ -78,7 +77,7 @@ func toneChar(c byte, tone byte) rune {
 			return t[tone]
 		}
 	}
-	return 0
+	return r
 }
 
 func toneRhymes(s string, tone byte) string {
@@ -300,32 +299,23 @@ func EncodeZhuyin(s string) string {
 	return encodeZhuyin(split(s))
 }
 
-func DecodeZhuyin(s string) string {
-	if s == "ㄝ" {
-		return "e5"
-	}
-
+func decodeZhuyin(s string) (string, string, byte) {
 	var consonant, rhymes string
 	var tone byte = 1
 
 split_input:
 	for i, ch := range s {
 		if v, ok := map_z2p[string(ch)]; ok {
-			if i == 0 {
-				if v == "i" {
-					v = "y"
-				} else if v == "u" {
-					v = "w"
-				}
+			if i == 0 && isConsonant(v[0]) {
 				consonant = v
 			} else {
-				rhymes = rhymes + v
+				rhymes = rhymes + string(ch)
 			}
 			continue
 		}
 
 		if i == 0 {
-			return ""
+			return "", "", 0
 		}
 
 		st := s[i:]
@@ -335,31 +325,62 @@ split_input:
 				break split_input
 			}
 		}
-		return ""
+		return "", "", 0
 	}
 
 	if len(rhymes) == 0 {
 		if consonant == "zh" || consonant == "ch" || consonant == "sh" ||
 			consonant == "r" || consonant == "z" || consonant == "c" ||
-			consonant == "s" || consonant == "y" {
+			consonant == "s" {
 			rhymes = "i"
-		} else if consonant == "w" {
-			rhymes = "u"
-		} else if consonant == "v" || consonant == "e" {
-			rhymes = consonant
-			consonant = "y"
 		}
-	} else {
-		/*
-			 || consonant == "ve" ||
-				consonant == "in" || consonant == "van" || consonant == "ing" ||
-				consonant == "vn"
-		*/
+		return consonant, rhymes, tone
 	}
 
+	rhymes, ok := map_z2p[rhymes]
+	if (!ok) || (!isRhymes(rhymes[0])) {
+		return "", "", 0
+	}
+	if len(consonant) == 0 {
+		if rhymes == "i" || rhymes == "v" || rhymes == "e" ||
+			rhymes == "ve" || rhymes == "in" || rhymes == "van" ||
+			rhymes == "ing" || rhymes == "vn" {
+			consonant = "y"
+		} else if rhymes == "u" {
+			consonant = "w"
+		} else if rhymes[0] == 'u' {
+			consonant = "w"
+			rhymes = rhymes[1:]
+		} else if rhymes[0] == 'i' {
+			consonant = "y"
+			rhymes = rhymes[1:]
+		}
+	}
+
+	return consonant, rhymes, tone
+}
+
+func DecodeZhuyin(s string) string {
+	if s == "ㄝ" {
+		return "e5"
+	}
+
+	consonant, rhymes, tone := decodeZhuyin(s)
+	if len(rhymes) == 0 {
+		return ""
+	}
 	return consonant + rhymes + string(tone+'0')
 }
 
+func PinyinToZhuyin(s string) string {
+	return encodeZhuyin(decodePinyin(s))
+}
+
+func ZhuyinToPinyin(s string) string {
+	return encodePinyin(decodeZhuyin(s))
+}
+
+/*
 type EncodeFunc func(p string) string
 
 func encode(s string, fn EncodeFunc) []string {
@@ -386,3 +407,4 @@ func encode(s string, fn EncodeFunc) []string {
 
 	return result
 }
+*/
