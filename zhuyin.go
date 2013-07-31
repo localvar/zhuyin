@@ -63,7 +63,7 @@ var (
 		// "一": "y", "ㄨ": "w",
 	}
 
-	// tones for Pinyin
+	// tonal marks for Pinyin
 	pinyinTones = [6][5]rune{
 		{'a', 'ā', 'á', 'ǎ', 'à'},
 		{'o', 'ō', 'ó', 'ǒ', 'ò'},
@@ -73,19 +73,19 @@ var (
 		{'ü', 'ǖ', 'ǘ', 'ǚ', 'ǜ'},
 	}
 
-	// tones for Zhuyin
+	// tonal marks for Zhuyin
 	zhuyinTones = [5]string{"˙", "", "ˊ", "ˇ", "ˋ"}
 )
 
-// toneChar returns the toned rune for char 'c' of 'tone' in Pinyin
-func toneChar(c byte, tone byte) rune {
+// toneChar returns the tonal marks for char 'c' of 'tone' in Pinyin
+func getTonalMark(c byte, tone byte) string {
 	r := rune(c)
 	if r == 'v' {
 		r = 'ü'
 	}
 	for _, t := range pinyinTones {
 		if r == t[0] {
-			return t[tone]
+			return string(t[tone])
 		}
 	}
 	panic("IMPOSSIBLE: should not run to here.")
@@ -95,7 +95,7 @@ func toneChar(c byte, tone byte) rune {
 func toneRhymes(s string, tone byte) string {
 	// if only one character, tone this character
 	if len(s) == 1 {
-		return string(toneChar(s[0], tone))
+		return getTonalMark(s[0], tone)
 	}
 
 	a, b := s[0], s[1]
@@ -105,11 +105,11 @@ func toneRhymes(s string, tone byte) string {
 	// * there's no 'a' and the 1st character is 'o' or 'e'
 	// * the 2nd character is not rhymes
 	if a == 'a' || ((a == 'o' || a == 'e') && b != 'a') || !isRhymes(b) {
-		return string(toneChar(a, tone)) + s[1:]
+		return getTonalMark(a, tone) + s[1:]
 	}
 
 	// tone the 2nd character otherwise
-	return string(a) + string(toneChar(b, tone)) + s[2:]
+	return string(a) + getTonalMark(b, tone) + s[2:]
 }
 
 // return true if the input character is rhymes, otherwise return false
@@ -422,9 +422,11 @@ split_input:
 	}
 
 	if len(consonant) == 0 {
-		// first, check if it is 'Zheng3 Ti3 Ren4 Du2',
-		// if not, remove leading 'u' and set consonant to 'w',
-		// or remove leading 'i' and set consonant to 'y',
+		// first:  check if it is 'Zheng3 Ti3 Ren4 Du2',
+		// second: remove leading 'u' and set consonant to 'w', or
+		//         remove leading 'i' and set consonant to 'y',
+		// last:   check for the very special case,
+		//         'ong' need to be converted to 'weng'
 		if rhymes == "i" || rhymes == "v" || rhymes == "e" ||
 			rhymes == "ve" || rhymes == "in" || rhymes == "van" ||
 			rhymes == "ing" || rhymes == "vn" {
@@ -437,6 +439,9 @@ split_input:
 		} else if rhymes[0] == 'i' {
 			consonant = "y"
 			rhymes = rhymes[1:]
+		} else if rhymes == "ong" {
+			consonant = "w"
+			rhymes = "eng"
 		}
 	}
 

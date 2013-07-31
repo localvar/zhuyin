@@ -134,6 +134,7 @@ func TestDecodeZhuyin(t *testing.T) {
 		"一ˊ", "yi2",
 		"ㄩㄢˊ", "yvan2",
 		"ㄇ一ㄣˊ", "min2",
+		"ㄨㄥˊ", "weng2",
 
 		// negative cases
 		"ㄩㄝㄝ", "",
@@ -153,6 +154,7 @@ func TestPinyinToZhuyin(t *testing.T) {
 	cases := []string{
 		"mín", "ㄇ一ㄣˊ",
 		"zhāng", "ㄓㄤ",
+		"wéng", "ㄨㄥˊ",
 	}
 	t.Log("testing pinyin to zhuyin...")
 	for i := 0; i < len(cases); i += 2 {
@@ -166,7 +168,8 @@ func TestPinyinToZhuyin(t *testing.T) {
 func TestZhuyinToPinyin(t *testing.T) {
 	cases := []string{
 		"ㄇ一ㄣˊ", "mín",
-		//	"ㄓㄤ", "zhāng",
+		"ㄓㄤ", "zhāng",
+		"ㄨㄥˊ", "wéng",
 	}
 
 	t.Log("testing zhuyin to pinyin...")
