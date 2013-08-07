@@ -77,7 +77,7 @@ var (
 	zhuyinTones = [5]string{"˙", "", "ˊ", "ˇ", "ˋ"}
 )
 
-// toneChar returns the tonal marks for char 'c' of 'tone' in Pinyin
+// getTonalMark returns the tonal marks for char 'c' of 'tone' in Pinyin
 func getTonalMark(c byte, tone byte) string {
 	r := rune(c)
 	if r == 'v' {
