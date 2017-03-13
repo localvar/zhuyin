@@ -1,5 +1,7 @@
 This README is written in Chinese because this library is for Chinese phonetic notation, the user need to know some Chinese to use it.
 
+If you're looking for the PHP version of this library, please checkout:　https://github.com/DictPedia/ZhuyinPinyin (此库的PHP版本)
+
 # 注音
 
 注音是中文处理的基本需求之一，在编辑低幼读物或古籍时更是常用。但现有的输入法和文字处理软件（如Word）处理起注音来却异常麻烦，要靠软键盘不停的切来切去才行。所以我就用Go语言实现了这个库，用来简化注音的处理。同时，它也是我想实现的另一个工具---[Chinese Markdown](https://github.com/localvar/cmd/)---的一个组件，这个工具的相对于标准Markdown的一个增强就是支持注音，也就是可用过类似 `张(zhang1)` 这样的输入最终显示出（您的浏览器要支持ruby标签才能看到效果）：<ruby>张<rt>zhāng</rt></ruby>。
