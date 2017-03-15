@@ -14,21 +14,21 @@ var (
 		"j": "ㄐ", "q": "ㄑ", "x": "ㄒ",
 		"zh": "ㄓ", "ch": "ㄔ", "sh": "ㄕ", "r": "ㄖ",
 		"z": "ㄗ", "c": "ㄘ", "s": "ㄙ",
-		"y": "一", "w": "ㄨ",
+		"y": "ㄧ", "w": "ㄨ",
 		// Rhymes
 		"a": "ㄚ", "o": "ㄛ", "e": "ㄜ",
-		"i": "一", "u": "ㄨ", "v": "ㄩ",
+		"i": "ㄧ", "u": "ㄨ", "v": "ㄩ",
 		"ai": "ㄞ", "ei": "ㄟ", "ui": "ㄨㄟ",
-		"ao": "ㄠ", "ou": "ㄡ", "iu": "一ㄡ",
-		"an": "ㄢ", "en": "ㄣ", "in": "一ㄣ",
-		"ang": "ㄤ", "eng": "ㄥ", "ing": "一ㄥ",
-		"ong": "ㄨㄥ", "ie": "一ㄝ", "er": "ㄦ",
+		"ao": "ㄠ", "ou": "ㄡ", "iu": "ㄧㄡ",
+		"an": "ㄢ", "en": "ㄣ", "in": "ㄧㄣ",
+		"ang": "ㄤ", "eng": "ㄥ", "ing": "ㄧㄥ",
+		"ong": "ㄨㄥ", "ie": "ㄧㄝ", "er": "ㄦ",
 		"ue": "ㄩㄝ", "ve": "ㄩㄝ", // 'ue' is same as 've', for typo
-		"un": "ㄨㄣ", "vn": "ㄩㄣ", "ia": "一ㄚ",
+		"un": "ㄨㄣ", "vn": "ㄩㄣ", "ia": "ㄧㄚ",
 		"ua": "ㄨㄚ", "uan": "ㄨㄢ", "van": "ㄩㄢ",
 		"uai": "ㄨㄞ", "uo": "ㄨㄛ", "iong": "ㄩㄥ",
-		"iang": "一ㄤ", "uang": "ㄨㄤ", "ian": "一ㄢ",
-		"iao": "一ㄠ",
+		"iang": "ㄧㄤ", "uang": "ㄨㄤ", "ian": "ㄧㄢ",
+		"iao": "ㄧㄠ",
 	}
 
 	// map of Zhuyin to Pinyin
@@ -43,24 +43,24 @@ var (
 
 		// Rhymes
 		"ㄚ": "a", "ㄛ": "o", "ㄜ": "e", "ㄝ": "e",
-		"一": "i", "ㄨ": "u", "ㄩ": "v",
+		"ㄧ": "i", "ㄨ": "u", "ㄩ": "v",
 		"ㄞ": "ai", "ㄟ": "ei", "ㄦ": "er",
 		"ㄠ": "ao", "ㄡ": "ou",
 		"ㄢ": "an", "ㄣ": "en",
 		"ㄤ": "ang", "ㄥ": "eng",
 
-		"ㄨㄥ": "ong", "一ㄝ": "ie",
-		"一ㄡ": "iu", "一ㄣ": "in", "一ㄥ": "ing",
+		"ㄨㄥ": "ong", "ㄧㄝ": "ie",
+		"ㄧㄡ": "iu", "ㄧㄣ": "in", "ㄧㄥ": "ing",
 		"ㄩㄝ": "ve",
-		"ㄨㄣ": "un", "ㄩㄣ": "vn", "一ㄚ": "ia",
+		"ㄨㄣ": "un", "ㄩㄣ": "vn", "ㄧㄚ": "ia",
 		"ㄨㄚ": "ua", "ㄨㄢ": "uan", "ㄩㄢ": "van",
 		"ㄨㄞ": "uai", "ㄨㄛ": "uo", "ㄩㄥ": "iong",
-		"一ㄤ": "iang", "ㄨㄤ": "uang", "一ㄢ": "ian",
-		"一ㄠ": "iao", "ㄨㄟ": "ui",
+		"ㄧㄤ": "iang", "ㄨㄤ": "uang", "ㄧㄢ": "ian",
+		"ㄧㄠ": "iao", "ㄨㄟ": "ui",
 
-		// 'y' and 'w' is not included because '一' and 'ㄨ' are already
+		// 'y' and 'w' is not included because 'ㄧ' and 'ㄨ' are already
 		// mapped to 'i' and 'u'
-		// "一": "y", "ㄨ": "w",
+		// "ㄧ": "y", "ㄨ": "w",
 	}
 
 	// tonal marks for Pinyin
@@ -302,7 +302,7 @@ func DecodePinyin(s string) string {
 }
 
 // encodePinyin encode the input consonant, rhymes and tone into Zhuyin
-// for example: encodePinyin("m", "in", 2) outputs 'ㄇ一ㄣˊ'
+// for example: encodePinyin("m", "in", 2) outputs 'ㄇㄧㄣˊ'
 // return an empty string in case an error
 func encodeZhuyin(consonant string, rhymes string, tone byte) string {
 	if len(rhymes) == 0 {
@@ -356,7 +356,7 @@ func encodeZhuyin(consonant string, rhymes string, tone byte) string {
 }
 
 // encodeZhuyin encode the input string into Zhuyin
-// for example: encodeZhuyin("min2") outputs 'ㄇ一ㄣˊ'
+// for example: encodeZhuyin("min2") outputs 'ㄇㄧㄣˊ'
 // return an empty string in case an error
 func EncodeZhuyin(s string) string {
 	if s == "e5" {
@@ -366,7 +366,7 @@ func EncodeZhuyin(s string) string {
 }
 
 // decodeZhuyin decode the input string into consonant, rhymes and tone
-// for example: decodeZhuyin("ㄇ一ㄣˊ") outputs 'm','in' and 2
+// for example: decodeZhuyin("ㄇㄧㄣˊ") outputs 'm','in' and 2
 // return an empty rhymes in case an error
 func decodeZhuyin(s string) (string, string, byte) {
 	var consonant, rhymes string
@@ -449,7 +449,7 @@ split_input:
 }
 
 // DecodePinyin decode the input Zhuyin
-// for example: DecodeZhuyin("ㄇ一ㄣˊ") outputs 'min2'
+// for example: DecodeZhuyin("ㄇㄧㄣˊ") outputs 'min2'
 // return an empty string in case an error
 func DecodeZhuyin(s string) string {
 	if s == "ㄝ" {
