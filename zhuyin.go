@@ -316,11 +316,10 @@ func encodeZhuyin(consonant string, rhymes string, tone byte) string {
 		}
 	}
 
-	// the special cases for 'Zheng3 Ti3 Ren4 Du2'
+	// the special cases for '整体认读'
 	if rhymes == "i" {
-		if consonant == "zh" || consonant == "ch" || consonant == "sh" ||
-			consonant == "r" || consonant == "z" || consonant == "c" ||
-			consonant == "s" || consonant == "y" {
+		switch consonant {
+		case "zh", "ch", "sh", "r", "z", "c", "s", "y":
 			rhymes = ""
 		}
 	} else if consonant == "w" {
@@ -328,8 +327,11 @@ func encodeZhuyin(consonant string, rhymes string, tone byte) string {
 			consonant = ""
 		}
 	} else if consonant == "y" {
-		if rhymes == "v" || rhymes == "e" || rhymes == "ve" || rhymes == "in" ||
-			rhymes == "van" || rhymes == "ing" || rhymes == "vn" {
+		switch rhymes {
+		case "e", "ong":
+			rhymes = "i" + rhymes
+			fallthrough
+		case "v", "ve", "in", "van", "ing", "vn":
 			consonant = ""
 		}
 	}
@@ -404,13 +406,12 @@ split_input:
 	}
 
 	if len(rhymes) == 0 {
-		// if it is 'Zheng3 Ti3 Ren4 Du2', the rhymes should be 'i'
-		if consonant == "zh" || consonant == "ch" || consonant == "sh" ||
-			consonant == "r" || consonant == "z" || consonant == "c" ||
-			consonant == "s" {
+		// if it is '整体认读', the rhymes should be 'i'
+		switch consonant {
+		case "zh", "ch", "sh", "r", "z", "c", "s":
 			rhymes = "i"
 		}
-		// rhymes will be empty if not 'Zheng3 Ti3 Ren4 Du2',
+		// rhymes will be empty if not '整体认读',
 		// this is an error case, will be handled outside
 		return consonant, rhymes, tone
 	}
@@ -422,7 +423,7 @@ split_input:
 	}
 
 	if len(consonant) == 0 {
-		// first:  check if it is 'Zheng3 Ti3 Ren4 Du2',
+		// first:  check if it is '整体认读',
 		// second: remove leading 'u' and set consonant to 'w', or
 		//         remove leading 'i' and set consonant to 'y',
 		// last:   check for the very special case,

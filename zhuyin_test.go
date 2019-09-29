@@ -96,6 +96,9 @@ func TestEncodeZhuyin(t *testing.T) {
 		"yuan2", "ㄩㄢˊ",
 		"yvan2", "ㄩㄢˊ",
 		"min2", "ㄇㄧㄣˊ",
+		"ye2", "ㄧㄝˊ",
+		"yong4", "ㄩㄥˋ",
+		"er2", "ㄦˊ",
 
 		// negative cases
 		"alkfj", "",
@@ -135,6 +138,8 @@ func TestDecodeZhuyin(t *testing.T) {
 		"ㄩㄢˊ", "yvan2",
 		"ㄇㄧㄣˊ", "min2",
 		"ㄨㄥˊ", "weng2",
+		"ㄧㄝˊ", "ye2",
+		"ㄩㄥˋ", "yong4",
 
 		// negative cases
 		"ㄩㄝㄝ", "",
